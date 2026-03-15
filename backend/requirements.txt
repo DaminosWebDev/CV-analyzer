@@ -1,0 +1,23 @@
+# backend/requirements.txt
+# Dépendances du projet CV-Analyzer-AI
+
+# ── Serveur web ───────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+
+# ── Validation des données ────────────────────────────
+pydantic==2.10.3
+pydantic-settings==2.7.0
+
+# ── LLM / IA ─────────────────────────────────────────
+groq==0.13.1
+
+# ── Parsing PDF ───────────────────────────────────────
+pymupdf==1.25.1
+
+# ── Variables d'environnement ─────────────────────────
+python-dotenv==1.0.1
+
+# ── Utilitaires HTTP ─────────────────────────────────
+httpx==0.28.1
+python-multipart==0.0.20
