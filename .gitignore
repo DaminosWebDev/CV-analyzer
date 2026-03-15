@@ -1,0 +1,23 @@
+# cv-analyzer-ai/.gitignore
+
+# ── Environnement Python ──────────────────────────────
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# ── Variables d'environnement (JAMAIS sur Git !) ──────
+.env
+*.env
+
+# ── Dépendances Node.js (frontend) ───────────────────
+node_modules/
+.next/
+
+# ── Fichiers système Windows ──────────────────────────
+Thumbs.db
+desktop.ini
+
+# ── VS Code ───────────────────────────────────────────
+.vscode/
