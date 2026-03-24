@@ -4,6 +4,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routers import analyze
 
 from app.config import settings
 
@@ -42,6 +43,9 @@ app.add_middleware(
     allow_methods=["*"],     # GET, POST, PUT, DELETE...
     allow_headers=["*"],     # Tous les headers HTTP autorisés
 )
+
+# ── Enregistrement des routers ────────────────────────────────────────────────
+app.include_router(analyze.router)
 
 # ── Routes de base ────────────────────────────────────────────────────────────
 @app.get("/", tags=["Root"])
