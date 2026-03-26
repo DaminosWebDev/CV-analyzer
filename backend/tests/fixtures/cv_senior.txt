@@ -1,0 +1,8 @@
+Lead Developer, 8 ans d'expérience.
+Compétences : Python, FastAPI, Django, React, TypeScript, PostgreSQL, Redis, Docker, Kubernetes, Terraform.
+Architecture microservices, API REST et GraphQL, CI/CD GitHub Actions.
+Management : lead technique d'une équipe de 5 développeurs.
+Expérience startup (CTO adjoint) + grands comptes (BNP, Total).
+Anglais courant, espagnol intermédiaire.
+Conférences : PyCon 2023 (speaker), DjangoCon 2022.
+Open source : contributeur actif FastAPI.

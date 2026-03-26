@@ -1,126 +1,161 @@
 # backend/app/services/llm_service.py
-# Rôle       : Service d'appel au LLM via Groq API
-# Dépendances: groq, app.config
+# Rôle : communication avec l'API Groq (LLM)
+# Dépendances : groq, config.py
+# MODIFICATION : ajout de call_llm_json() et clean_json_response()
 
-from groq import Groq, AsyncGroq
-from typing import AsyncGenerator
-from app.config import get_settings
+import json
+import re
+from groq import Groq
+from app.config import settings
 
-# Instance du client Groq — créée une seule fois au démarrage
-settings = get_settings()
-
-# Client synchrone — pour les appels normaux
-_groq_client = Groq(api_key=settings.groq_api_key)
-
-# Client asynchrone — pour le streaming SSE
-_groq_async_client = AsyncGroq(api_key=settings.groq_api_key)
+# Client Groq initialisé une seule fois au démarrage
+# (pas besoin d'en créer un nouveau à chaque appel)
+client = Groq(api_key=settings.groq_api_key)
 
 
-def call_llm(
-    system_prompt: str,
-    user_prompt: str,
-    max_tokens: int = 2000,
-    temperature: float = 0.3,
-) -> str:
+def clean_json_response(text: str) -> str:
     """
-    Appel synchrone au LLM — retourne la réponse complète.
-    Utilisé pour les analyses JSON structurées.
-
+    Nettoie la réponse du LLM pour extraire uniquement le JSON valide.
+    
+    Problème courant : le LLM retourne parfois :
+      "Bien sûr ! Voici le résultat : ```json { ... } ``` "
+    Au lieu de simplement :
+      { ... }
+    
+    Cette fonction extrait le JSON propre dans les deux cas.
+    
     Args:
-        system_prompt: instructions de comportement pour le LLM
-        user_prompt: la requête de l'utilisateur
-        max_tokens: limite de longueur de la réponse
-        temperature: créativité (0 = déterministe, 1 = créatif)
-
+        text : la réponse brute du LLM
+    
     Returns:
-        texte de la réponse du LLM
+        str : le JSON nettoyé, prêt pour json.loads()
+    """
+    # Étape 1 : supprimer les espaces/sauts de ligne en début et fin
+    text = text.strip()
+    
+    # Étape 2 : chercher un bloc ```json ... ``` (cas le plus fréquent)
+    # re.DOTALL = le "." matche aussi les sauts de ligne
+    json_block = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
+    if json_block:
+        return json_block.group(1).strip()
+    
+    # Étape 3 : chercher un bloc ``` ... ``` sans "json"
+    code_block = re.search(r'```\s*(.*?)\s*```', text, re.DOTALL)
+    if code_block:
+        return code_block.group(1).strip()
+    
+    # Étape 4 : chercher directement { ... } dans la réponse
+    # Utile si le LLM écrit du texte AVANT le JSON
+    brace_match = re.search(r'\{.*\}', text, re.DOTALL)
+    if brace_match:
+        return brace_match.group(0).strip()
+    
+    # Étape 5 : rien trouvé → on retourne le texte tel quel
+    # L'appelant devra gérer l'exception json.loads()
+    return text
 
+
+async def call_llm_json(prompt: str) -> dict:
+    """
+    Envoie un prompt au LLM et retourne la réponse parsée en dict Python.
+    
+    Contrairement à call_llm() qui retourne du texte brut,
+    call_llm_json() s'attend à recevoir du JSON et le parse automatiquement.
+    
+    Args:
+        prompt : le prompt complet (construit par build_scoring_prompt, etc.)
+    
+    Returns:
+        dict : la réponse du LLM parsée en dictionnaire Python
+    
     Raises:
-        RuntimeError: si l'appel API échoue
+        ValueError : si le LLM ne retourne pas du JSON valide après nettoyage
     """
     try:
-        response = _groq_client.chat.completions.create(
-            model=settings.groq_model,
+        # Appel à l'API Groq
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
+                {
+                    "role": "user",
+                    "content": prompt
+                }
             ],
-            max_tokens=max_tokens,
-            temperature=temperature,
+            temperature=0.1,  # Très bas : on veut des réponses reproductibles
+                               # 0.0 = déterministe, 1.0 = très créatif
+                               # Pour du JSON structuré → toujours proche de 0
+            max_tokens=1000,   # Le JSON de scoring est petit, 1000 tokens suffisent
         )
-        return response.choices[0].message.content
-
+        
+        # Extraction du texte de la réponse
+        raw_text = response.choices[0].message.content
+        
+        # Nettoyage du JSON parasite
+        clean_text = clean_json_response(raw_text)
+        
+        # Parsing JSON → dict Python
+        # Si ça plante ici, c'est que le prompt doit être amélioré
+        result = json.loads(clean_text)
+        
+        return result
+        
+    except json.JSONDecodeError as e:
+        # Le LLM n'a pas retourné du JSON valide
+        # On lève une erreur claire avec le texte brut pour déboguer
+        raise ValueError(
+            f"Le LLM n'a pas retourné du JSON valide.\n"
+            f"Erreur : {e}\n"
+            f"Réponse brute reçue : {raw_text[:500]}"  # On tronque à 500 chars
+        )
+    
     except Exception as e:
-        raise RuntimeError(f"Erreur appel LLM : {str(e)}")
+        # Erreur API Groq (quota, connexion, etc.)
+        raise ValueError(f"Erreur lors de l'appel au LLM : {e}")
 
 
-async def stream_llm(
-    system_prompt: str,
-    user_prompt: str,
-    max_tokens: int = 2000,
-    temperature: float = 0.7,
-) -> AsyncGenerator[str, None]:
+# --- Garde la fonction existante pour le streaming (Bloc 3) ---
+async def call_llm_stream(prompt: str):
     """
-    Appel asynchrone au LLM avec streaming — retourne les tokens un par un.
-    Utilisé pour l'endpoint SSE /analyze/stream.
+    Envoie un prompt au LLM et retourne les tokens un par un via un générateur async.
+
+    Contrairement à call_llm_json() qui attend la réponse complète,
+    call_llm_stream() yield chaque morceau de texte dès qu'il arrive.
+
+    C'est un "générateur async" — il utilise "yield" au lieu de "return".
+    Chaque "yield" envoie un token au code appelant sans fermer la fonction.
 
     Args:
-        system_prompt: instructions de comportement pour le LLM
-        user_prompt: la requête de l'utilisateur
-        max_tokens: limite de longueur de la réponse
-        temperature: créativité
+        prompt : le prompt complet à envoyer
 
     Yields:
-        chaque token de texte au fur et à mesure qu'il arrive
+        str : chaque token de texte généré par le LLM
     """
     try:
-        # stream=True active le mode streaming
-        stream = await _groq_async_client.chat.completions.create(
-            model=settings.groq_model,
+        # stream=True → Groq envoie les tokens au fur et à mesure
+        # au lieu d'attendre que tout soit généré
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt},
+                {
+                    "role": "user",
+                    "content": prompt
+                }
             ],
-            max_tokens=max_tokens,
-            temperature=temperature,
-            stream=True,
+            temperature=0.7,  # Plus élevé qu'au Bloc 1 : on veut des conseils
+                               # variés et naturels, pas des réponses robotiques
+            max_tokens=800,    # ~350 mots — cohérent avec la consigne du prompt
+            stream=True,       # ← LA CLÉ : active le streaming token par token
         )
 
-        # On itère sur les chunks reçus un par un
-        async for chunk in stream:
-            # Chaque chunk peut contenir un token ou être vide
+        # On itère sur les chunks reçus au fur et à mesure
+        for chunk in response:
+            # Chaque chunk contient potentiellement un morceau de texte
+            # On vérifie qu'il n'est pas vide avant de le yielder
             token = chunk.choices[0].delta.content
             if token is not None:
                 yield token
 
     except Exception as e:
-        # En cas d'erreur pendant le stream, on yield un message d'erreur
-        yield f"\n[ERREUR STREAM : {str(e)}]"
-
-
-def check_llm_connection() -> dict:
-    """
-    Vérifie que la connexion Groq fonctionne.
-    Utilisé par l'endpoint /health.
-
-    Returns:
-        dict avec status et model
-    """
-    try:
-        response = _groq_client.chat.completions.create(
-            model=settings.groq_model,
-            messages=[{"role": "user", "content": "Réponds uniquement : OK"}],
-            max_tokens=5,
-        )
-        answer = response.choices[0].message.content.strip()
-        return {
-            "status": "connected",
-            "model": settings.groq_model,
-            "test_response": answer
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "model": settings.groq_model,
-            "error": str(e)
-        }
+        # En cas d'erreur, on yield un message d'erreur formaté
+        # Le frontend pourra le détecter et l'afficher
+        yield f"[ERREUR] {str(e)}"

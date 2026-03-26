@@ -10,15 +10,14 @@ from app.schemas.analyze import (
     AnalyzeRequest,
     AnalyzeResponse,
     PDFExtractResponse,
+    StreamRequest,
 )
 from app.services.analyze_service import analyze_cv, stream_advice
 from app.services.pdf_service import extract_text_from_pdf
 
-# ── Création du router ────────────────────────────────────────────────────────
-# Un router est un "mini-app" FastAPI qu'on branche sur l'app principale
 router = APIRouter(
-    prefix="/api/v1",        # toutes les routes commencent par /api/v1
-    tags=["Analysis"],       # groupe dans la doc Swagger
+    prefix="/api/v1",
+    tags=["Analysis"],
 )
 
 
@@ -28,21 +27,15 @@ router = APIRouter(
 
 @router.post("/upload-cv", response_model=PDFExtractResponse)
 async def upload_cv(file: UploadFile = File(...)):
-    """
-    Upload un fichier PDF et extrait son texte.
-    Retourne le texte brut pour l'afficher dans le frontend.
-    """
-    # Vérification du type de fichier
+    """Upload un fichier PDF et extrait son texte."""
     if not file.filename.endswith(".pdf"):
         raise HTTPException(
             status_code=400,
             detail="Seuls les fichiers PDF sont acceptés"
         )
 
-    # Lecture du fichier en mémoire
     file_bytes = await file.read()
 
-    # Extraction du texte
     try:
         text, page_count = extract_text_from_pdf(file_bytes)
         return PDFExtractResponse(
@@ -64,12 +57,10 @@ async def upload_cv(file: UploadFile = File(...)):
 
 @router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze(request: AnalyzeRequest):
-    """
-    Analyse la compatibilité entre un CV et une offre d'emploi.
-    Retourne le résultat complet en JSON (score, mots-clés, conseils).
-    """
+    """Analyse la compatibilité entre un CV et une offre d'emploi."""
     try:
-        result = analyze_cv(
+        # ⚠️ CORRECTION : await obligatoire car analyze_cv est async
+        result = await analyze_cv(
             cv_text=request.cv_text,
             job_offer=request.job_offer,
         )
@@ -77,11 +68,8 @@ async def analyze(request: AnalyzeRequest):
             success=True,
             data=result,
         )
-    except RuntimeError as e:
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ═══════════════════════════════════════════════════════════
@@ -89,26 +77,22 @@ async def analyze(request: AnalyzeRequest):
 # ═══════════════════════════════════════════════════════════
 
 @router.post("/analyze/stream")
-async def analyze_stream(request: AnalyzeRequest):
+async def analyze_stream(request: StreamRequest):
     """
-    Génère les conseils détaillés en streaming SSE.
-    Les tokens arrivent en temps réel dans le frontend.
-
-    Format SSE : chaque message est préfixé par 'data: '
+    Génère les conseils d'amélioration en streaming SSE token par token.
+    Le frontend reçoit chaque mot dès qu'il est généré par le LLM.
     """
 
     async def event_generator():
-        """Générateur SSE — formate chaque token en message SSE"""
         try:
             async for token in stream_advice(
                 cv_text=request.cv_text,
                 job_offer=request.job_offer,
-                match_score=75,  # valeur par défaut — idéalement passée par le frontend
+                score=request.score,
+                points_faibles=request.points_faibles,
             ):
-                # Format SSE standard : "data: <contenu>\n\n"
                 yield f"data: {json.dumps({'token': token})}\n\n"
 
-            # Signal de fin de stream
             yield f"data: {json.dumps({'done': True})}\n\n"
 
         except Exception as e:
@@ -118,9 +102,8 @@ async def analyze_stream(request: AnalyzeRequest):
         event_generator(),
         media_type="text/event-stream",
         headers={
-            # Désactive la mise en cache — le stream doit arriver en temps réel
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",  # important pour Nginx/Render
+            "X-Accel-Buffering": "no",
         }
     )

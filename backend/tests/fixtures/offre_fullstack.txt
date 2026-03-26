@@ -1,0 +1,8 @@
+Développeur Full-Stack Python/React — CDI Paris
+Nous cherchons un développeur avec 2-4 ans d'expérience.
+Stack : Python, FastAPI ou Django, React, PostgreSQL.
+Docker apprécié. Git obligatoire.
+Équipe de 6 personnes, méthodes agiles (Scrum).
+Anglais requis pour la documentation technique.
+Salaire : 42-52k€ selon profil.
+Télétravail partiel possible.

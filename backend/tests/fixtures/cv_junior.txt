@@ -1,0 +1,6 @@
+Étudiant en informatique, 23 ans, diplôme Bachelor en cours.
+Stage de 3 mois chez une startup : développement Python basique, scripts d'automatisation.
+Notions HTML/CSS vues en cours.
+Projet personnel : site vitrine en HTML statique.
+Langues : français natif, anglais scolaire (B1).
+Pas d'expérience professionnelle significative.

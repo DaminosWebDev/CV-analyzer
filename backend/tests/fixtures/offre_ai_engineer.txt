@@ -1,0 +1,8 @@
+AI Engineer / LLM Developer — Remote
+Startup IA recherche développeur passionné par les LLMs.
+Compétences requises : Python avancé, expérience LangChain ou LlamaIndex,
+API OpenAI/Anthropic/Groq, prompt engineering, RAG pipelines.
+Nice to have : FastAPI, déploiement cloud, React pour démos.
+Anglais courant obligatoire (équipe internationale).
+Profil autonome, curieux, capable de prototyper rapidement.
+2+ ans d'expérience en développement.

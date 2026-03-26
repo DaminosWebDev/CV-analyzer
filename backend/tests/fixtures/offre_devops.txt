@@ -1,0 +1,8 @@
+DevOps Engineer — CDI Lyon
+Poste orienté infrastructure et CI/CD.
+Compétences requises : Docker, Kubernetes, Terraform, AWS ou GCP.
+CI/CD : GitHub Actions ou GitLab CI.
+Scripting Python ou Bash.
+Monitoring : Prometheus, Grafana apprécié.
+3+ ans d'expérience DevOps ou SRE.
+Anglais technique requis.

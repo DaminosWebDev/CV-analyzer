@@ -1,0 +1,7 @@
+Développeur Full-Stack, 3 ans d'expérience professionnelle.
+Compétences techniques : Python, FastAPI, React (hooks, context), PostgreSQL, Git, Docker basique.
+Expérience : 2 ans dans une agence web (projets clients variés), 1 an en startup SaaS.
+Méthodes agiles, sprints Scrum, code review.
+Anglais courant (télétravail avec équipe britannique).
+Déploiement sur Heroku et AWS EC2.
+Formation : Licence informatique + bootcamp JavaScript.
