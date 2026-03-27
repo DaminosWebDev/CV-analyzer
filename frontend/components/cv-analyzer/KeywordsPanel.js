@@ -1,33 +1,34 @@
 // frontend/components/cv-analyzer/KeywordsPanel.js
-// Rôle : Affiche les mots-clés techniques et soft skills présents/manquants
-// Dépendances : shadcn/ui Card, Badge
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-
-// Sous-composant pour une liste de mots-clés avec badges colorés
-function KeywordGroup({ title, keywords, variant }) {
-  if (!keywords?.length) return null
-
+function KeywordBadge({ keyword, present }) {
   return (
-    <div className="space-y-2">
-      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+    <span style={{
+      fontSize: "11px",
+      padding: "3px 9px",
+      borderRadius: "20px",
+      background: present ? "var(--success-bg)" : "var(--danger-bg)",
+      border: `0.5px solid ${present ? "var(--success-border)" : "var(--danger-border)"}`,
+      color: present ? "var(--success)" : "var(--danger)",
+    }}>
+      {present ? "✓ " : "✗ "}{keyword}
+    </span>
+  )
+}
+
+function KeywordGroup({ title, keywords, present }) {
+  if (!keywords?.length) return null
+  return (
+    <div style={{ marginBottom: "12px" }}>
+      <div style={{
+        fontSize: "10px", color: "var(--text-muted)",
+        textTransform: "uppercase", letterSpacing: "0.06em",
+        marginBottom: "6px",
+      }}>
         {title}
-      </h4>
-      <div className="flex flex-wrap gap-2">
-        {keywords.map((keyword, index) => (
-          <Badge
-            key={index}
-            variant="outline"
-            className={
-              variant === "present"
-                ? "bg-green-50 text-green-700 border-green-300"
-                : "bg-red-50 text-red-700 border-red-300"
-            }
-          >
-            {variant === "present" ? "✓ " : "✗ "}
-            {keyword}
-          </Badge>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+        {keywords.map((kw, i) => (
+          <KeywordBadge key={i} keyword={kw} present={present} />
         ))}
       </div>
     </div>
@@ -36,59 +37,44 @@ function KeywordGroup({ title, keywords, variant }) {
 
 export default function KeywordsPanel({ keywords }) {
   if (!keywords) return null
-
   const { techniques, soft_skills } = keywords
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg text-slate-700">
-          Analyse des compétences
-        </CardTitle>
-      </CardHeader>
+    <div style={{
+      background: "var(--bg-surface)",
+      border: "0.5px solid var(--border)",
+      borderRadius: "10px", padding: "18px",
+    }}>
+      <div style={{
+        fontSize: "11px", color: "var(--accent)",
+        fontWeight: 500, letterSpacing: "0.08em",
+        textTransform: "uppercase", marginBottom: "14px",
+      }}>
+        Analyse des compétences
+      </div>
 
-      <CardContent className="space-y-6">
+      <div style={{
+        fontSize: "12px", color: "var(--text-secondary)",
+        fontWeight: 500, marginBottom: "10px",
+      }}>
+        Compétences techniques
+      </div>
+      <KeywordGroup title="Présentes" keywords={techniques?.presentes} present={true} />
+      <KeywordGroup title="Manquantes" keywords={techniques?.manquantes} present={false} />
 
-        {/* Compétences techniques */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            <span>⚙️</span> Compétences techniques
-          </h3>
+      <div style={{
+        borderTop: "0.5px solid var(--border)",
+        marginTop: "8px", marginBottom: "12px",
+      }} />
 
-          <KeywordGroup
-            title="Présentes dans votre CV"
-            keywords={techniques?.presentes}
-            variant="present"
-          />
-          <KeywordGroup
-            title="Manquantes — à ajouter"
-            keywords={techniques?.manquantes}
-            variant="missing"
-          />
-        </div>
-
-        {/* Séparateur visuel */}
-        <div className="border-t border-slate-100" />
-
-        {/* Soft skills */}
-        <div className="space-y-4">
-          <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-            <span>🤝</span> Soft skills
-          </h3>
-
-          <KeywordGroup
-            title="Présentes dans votre CV"
-            keywords={soft_skills?.presentes}
-            variant="present"
-          />
-          <KeywordGroup
-            title="Manquantes — à ajouter"
-            keywords={soft_skills?.manquantes}
-            variant="missing"
-          />
-        </div>
-
-      </CardContent>
-    </Card>
+      <div style={{
+        fontSize: "12px", color: "var(--text-secondary)",
+        fontWeight: 500, marginBottom: "10px",
+      }}>
+        Soft skills
+      </div>
+      <KeywordGroup title="Présentes" keywords={soft_skills?.presentes} present={true} />
+      <KeywordGroup title="Manquantes" keywords={soft_skills?.manquantes} present={false} />
+    </div>
   )
 }

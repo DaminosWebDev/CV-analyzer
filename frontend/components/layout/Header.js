@@ -1,24 +1,42 @@
 // frontend/components/layout/Header.js
-// Rôle : Barre de navigation fixe en haut de la page
-// Dépendances : aucune
 
 export default function Header() {
   return (
-    <header className="border-b bg-white sticky top-0 z-10">
-      <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-
-        {/* Logo + nom de l'app */}
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🎯</span>
-          <span className="font-bold text-slate-800">CV Analyzer AI</span>
-        </div>
-
-        {/* Badge RGPD — argument portfolio important */}
-        <div className="flex items-center gap-1 text-xs text-slate-500">
-          <span>🔒</span>
-          <span>Aucune donnée stockée — RGPD friendly</span>
-        </div>
-
+    <header style={{
+      background: "var(--bg-surface)",
+      borderBottom: "0.5px solid var(--border)",
+      padding: "0 24px",
+      height: "52px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      position: "sticky",
+      top: 0,
+      zIndex: 10,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div style={{
+          width: "8px", height: "8px",
+          borderRadius: "50%",
+          background: "var(--accent)",
+        }} />
+        <span style={{
+          color: "var(--text-primary)",
+          fontSize: "15px",
+          fontWeight: 500,
+        }}>
+          CV Analyzer AI
+        </span>
+      </div>
+      <div style={{
+        display: "flex", alignItems: "center", gap: "6px",
+        fontSize: "11px", color: "var(--text-muted)",
+      }}>
+        <div style={{
+          width: "6px", height: "6px",
+          borderRadius: "50%", background: "#22c55e",
+        }} />
+        Aucune donnée stockée — RGPD friendly
       </div>
     </header>
   )

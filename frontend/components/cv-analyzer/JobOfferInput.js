@@ -1,42 +1,57 @@
 // frontend/components/cv-analyzer/JobOfferInput.js
-// Rôle : Textarea pour coller l'offre d'emploi
-// Dépendances : shadcn/ui Textarea, Badge
-
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
 
 export default function JobOfferInput({ value, onChange }) {
   const charCount = value.length
-  // Offre considérée valide à partir de 50 caractères
   const isValid = charCount >= 50
 
   return (
-    <div className="space-y-2">
-
-      {/* Label + compteur de caractères */}
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-slate-700">
+    <div>
+      <div style={{
+        display: "flex", justifyContent: "space-between",
+        alignItems: "center", marginBottom: "8px",
+      }}>
+        <div style={{
+          fontSize: "11px", color: "var(--accent)",
+          fontWeight: 500, letterSpacing: "0.08em",
+          textTransform: "uppercase",
+        }}>
           Offre d'emploi
-        </label>
-        <span className={`text-xs ${isValid ? "text-green-600" : "text-slate-400"}`}>
-          {charCount} caractères {isValid ? "✓" : "(min. 50)"}
+        </div>
+        <span style={{
+          fontSize: "11px",
+          color: isValid ? "var(--success)" : "var(--text-muted)",
+        }}>
+          {charCount.toLocaleString()} car.{isValid ? " ✓" : " (min. 50)"}
         </span>
       </div>
 
-      <Textarea
+      <textarea
         placeholder="Collez ici le texte complet de l'offre d'emploi..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="min-h-48 resize-y font-mono text-sm"
+        style={{
+          width: "100%",
+          minHeight: "140px",
+          background: "var(--bg-surface)",
+          border: `0.5px solid ${isValid ? "var(--success-border)" : "var(--border)"}`,
+          borderRadius: "10px",
+          padding: "12px 14px",
+          color: "var(--text-primary)",
+          fontSize: "12px",
+          fontFamily: "var(--font-mono, monospace)",
+          lineHeight: "1.6",
+          resize: "vertical",
+          outline: "none",
+          transition: "border-color 0.2s",
+        }}
+        onFocus={e => {
+          if (!isValid) e.target.style.borderColor = "var(--accent)"
+        }}
+        onBlur={e => {
+          e.target.style.borderColor = isValid
+            ? "var(--success-border)" : "var(--border)"
+        }}
       />
-
-      {/* Indication visuelle si l'offre est prête */}
-      {isValid && (
-        <Badge variant="outline" className="text-green-600 border-green-400">
-          Offre prête pour l'analyse
-        </Badge>
-      )}
-
     </div>
   )
 }

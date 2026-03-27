@@ -1,103 +1,117 @@
 // frontend/components/cv-analyzer/CVUploader.js
-// Rôle : Zone d'upload du CV (drag & drop + clic)
-// Dépendances : shadcn/ui Card, Badge — hook useRef, useState
 
 import { useRef } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 
-export default function CVUploader({ cvFile, cvText, onFileSelect, error }) {
-  // useRef pointe vers l'élément <input type="file"> caché
-  // On s'en sert pour déclencher l'ouverture du sélecteur de fichiers
+export default function CVUploader({ cvFile, cvText, onFileSelect }) {
   const inputRef = useRef(null)
 
-  const handleClick = () => {
-    inputRef.current?.click()
-  }
-
-  const handleChange = (e) => {
-    const file = e.target.files?.[0]
-    if (file) onFileSelect(file)
-  }
-
-  // Gestion du drag & drop
   const handleDrop = (e) => {
     e.preventDefault()
     const file = e.dataTransfer.files?.[0]
     if (file) onFileSelect(file)
   }
 
-  const handleDragOver = (e) => {
-    e.preventDefault() // Nécessaire pour autoriser le drop
-  }
-
-  // Détermine l'apparence selon l'état
   const isUploaded = !!cvText
-  const hasError = !!error
 
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium text-slate-700">
-        Votre CV (PDF)
-      </label>
+    <div>
+      <div style={{
+        fontSize: "11px", color: "var(--accent)",
+        fontWeight: 500, letterSpacing: "0.08em",
+        textTransform: "uppercase", marginBottom: "8px",
+      }}>
+        Votre CV
+      </div>
 
-      {/* Zone de drop — input file caché derrière */}
-      <Card
-        onClick={handleClick}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        className={`
-          cursor-pointer transition-colors border-2 border-dashed
-          ${isUploaded
-            ? "border-green-400 bg-green-50"
-            : "border-slate-200 hover:border-slate-400 bg-white"
-          }
-          ${hasError ? "border-red-400 bg-red-50" : ""}
-        `}
-      >
-        <CardContent className="flex flex-col items-center justify-center py-8 gap-2">
-
-          {/* Icône selon l'état */}
-          <span className="text-3xl">
-            {isUploaded ? "✅" : "📄"}
-          </span>
-
-          {/* Texte selon l'état */}
-          {isUploaded ? (
-            <div className="text-center">
-              <p className="font-medium text-green-700">{cvFile?.name}</p>
-              <p className="text-xs text-green-600 mt-1">
-                {cvText.length} caractères extraits
-              </p>
+      {isUploaded ? (
+        // État : CV chargé
+        <div
+          onClick={() => inputRef.current?.click()}
+          style={{
+            background: "var(--success-bg)",
+            border: "1.5px solid var(--success-border)",
+            borderRadius: "10px", padding: "14px 16px",
+            display: "flex", alignItems: "center",
+            gap: "12px", cursor: "pointer",
+          }}
+        >
+          <div style={{
+            width: "30px", height: "30px", borderRadius: "50%",
+            background: "var(--success-border)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            flexShrink: 0,
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="#4ade80" strokeWidth="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{
+              color: "var(--success)", fontSize: "13px",
+              fontWeight: 500, whiteSpace: "nowrap",
+              overflow: "hidden", textOverflow: "ellipsis",
+            }}>
+              {cvFile?.name}
             </div>
-          ) : (
-            <div className="text-center">
-              <p className="text-slate-600">
-                Glissez votre CV ici ou{" "}
-                <span className="text-blue-600 underline">cliquez pour parcourir</span>
-              </p>
-              <p className="text-xs text-slate-400 mt-1">PDF uniquement — 5 Mo max</p>
+            <div style={{ color: "#16a34a", fontSize: "11px", marginTop: "2px" }}>
+              {cvText.length.toLocaleString()} caractères extraits
+              · Cliquer pour changer
             </div>
-          )}
+          </div>
+        </div>
+      ) : (
+        // État : pas encore de CV
+        <div
+          onClick={() => inputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          style={{
+            background: "var(--bg-surface)",
+            border: "1.5px dashed var(--border)",
+            borderRadius: "10px", padding: "28px",
+            textAlign: "center", cursor: "pointer",
+            transition: "border-color 0.2s",
+          }}
+          onMouseEnter={e => e.currentTarget.style.borderColor = "var(--accent)"}
+          onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}
+        >
+          <div style={{
+            width: "36px", height: "36px",
+            background: "var(--bg-surface-hover)",
+            borderRadius: "8px", margin: "0 auto 12px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="var(--accent)" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <div style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+            Glissez votre CV ici ou{" "}
+            <span style={{ color: "var(--accent)" }}>cliquez pour parcourir</span>
+          </div>
+          <div style={{
+            color: "var(--text-muted)", fontSize: "11px", marginTop: "4px",
+          }}>
+            PDF uniquement — 5 Mo max
+          </div>
+        </div>
+      )}
 
-        </CardContent>
-      </Card>
-
-      {/* Input file caché — le vrai mécanisme d'upload */}
       <input
         ref={inputRef}
         type="file"
         accept=".pdf,application/pdf"
-        onChange={handleChange}
-        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) onFileSelect(file)
+        }}
+        style={{ display: "none" }}
       />
-
-      {/* Badge si upload réussi */}
-      {isUploaded && (
-        <Badge variant="outline" className="text-green-600 border-green-400">
-          CV chargé avec succès
-        </Badge>
-      )}
     </div>
   )
 }

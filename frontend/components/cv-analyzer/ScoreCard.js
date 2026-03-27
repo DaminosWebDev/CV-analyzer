@@ -1,126 +1,133 @@
 // frontend/components/cv-analyzer/ScoreCard.js
-// Rôle : Affiche le score de compatibilité + niveau + points forts/faibles
-// Dépendances : shadcn/ui Card, Badge, Progress
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-
-// Détermine la couleur selon le score
-// Analogie : feux tricolores — rouge/orange/vert
 function getScoreColor(score) {
-  if (score >= 70) return "text-green-600"
-  if (score >= 40) return "text-orange-500"
-  return "text-red-500"
+  if (score >= 70) return "var(--success)"
+  if (score >= 40) return "var(--warning)"
+  return "var(--danger)"
 }
 
-function getProgressColor(score) {
-  if (score >= 70) return "bg-green-500"
-  if (score >= 40) return "bg-orange-500"
-  return "bg-red-500"
-}
-
-function getNiveauColor(niveau) {
-  const colors = {
-    "Expert":        "bg-green-100 text-green-700 border-green-300",
-    "Confirmé":      "bg-blue-100 text-blue-700 border-blue-300",
-    "Intermédiaire": "bg-orange-100 text-orange-700 border-orange-300",
-    "Débutant":      "bg-red-100 text-red-700 border-red-300",
+function getNiveauStyle(niveau) {
+  const styles = {
+    "Expert":        { bg: "var(--success-bg)", border: "var(--success-border)", color: "var(--success)" },
+    "Confirmé":      { bg: "#0d1a2e", border: "#1e3a5f", color: "#60a5fa" },
+    "Intermédiaire": { bg: "var(--warning-bg)", border: "var(--warning-border)", color: "var(--warning)" },
+    "Débutant":      { bg: "var(--danger-bg)", border: "var(--danger-border)", color: "var(--danger)" },
   }
-  // Retourne une couleur par défaut si le niveau n'est pas reconnu
-  return colors[niveau] || "bg-slate-100 text-slate-700 border-slate-300"
+  return styles[niveau] || { bg: "var(--bg-surface-hover)", border: "var(--border)", color: "var(--text-secondary)" }
 }
 
 export default function ScoreCard({ results }) {
-  // Si pas de résultats, on n'affiche rien
   if (!results) return null
-
   const { score, niveau, points_forts, points_faibles, justification } = results
+  const niveauStyle = getNiveauStyle(niveau)
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg text-slate-700">
-          Score de compatibilité
-        </CardTitle>
-      </CardHeader>
+    <div style={{
+      background: "var(--bg-surface)",
+      border: "0.5px solid var(--border)",
+      borderRadius: "10px",
+      padding: "18px",
+    }}>
+      <div style={{
+        fontSize: "11px", color: "var(--accent)",
+        fontWeight: 500, letterSpacing: "0.08em",
+        textTransform: "uppercase", marginBottom: "14px",
+      }}>
+        Score de compatibilité
+      </div>
 
-      <CardContent className="space-y-6">
-
-        {/* Score principal + barre de progression */}
-        <div className="space-y-2">
-          <div className="flex items-end gap-2">
-            <span className={`text-6xl font-bold ${getScoreColor(score)}`}>
-              {score}
-            </span>
-            <span className="text-2xl text-slate-400 mb-2">/100</span>
-            <Badge
-              variant="outline"
-              className={`ml-2 mb-2 ${getNiveauColor(niveau)}`}
-            >
-              {niveau}
-            </Badge>
-          </div>
-
-          {/* Barre de progression colorée */}
-          <div className="relative h-3 w-full rounded-full bg-slate-100 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-700 ${getProgressColor(score)}`}
-              style={{ width: `${score}%` }}
-            />
-          </div>
+      {/* Score + niveau */}
+      <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", marginBottom: "10px" }}>
+        <span style={{
+          fontSize: "52px", fontWeight: 700,
+          color: getScoreColor(score), lineHeight: 1,
+        }}>
+          {score}
+        </span>
+        <span style={{ color: "var(--text-muted)", fontSize: "20px", marginBottom: "6px" }}>
+          /100
+        </span>
+        <div style={{
+          ...niveauStyle,
+          fontSize: "11px", padding: "3px 10px",
+          borderRadius: "20px", border: `0.5px solid ${niveauStyle.border}`,
+          marginBottom: "6px",
+        }}>
+          {niveau}
         </div>
+      </div>
 
-        {/* Justification du score */}
-        {justification && (
-          <div className="p-3 bg-slate-50 rounded-md border border-slate-200">
-            <p className="text-sm text-slate-600 italic">
-              💬 {justification}
-            </p>
+      {/* Barre de progression */}
+      <div style={{
+        background: "var(--bg-surface-hover)",
+        borderRadius: "4px", height: "6px",
+        overflow: "hidden", marginBottom: "16px",
+      }}>
+        <div style={{
+          width: `${score}%`, height: "100%",
+          background: getScoreColor(score),
+          borderRadius: "4px",
+          transition: "width 0.8s ease",
+        }} />
+      </div>
+
+      {/* Justification */}
+      {justification && (
+        <div style={{
+          background: "var(--bg-surface-hover)",
+          border: "0.5px solid var(--border)",
+          borderRadius: "8px", padding: "10px 12px",
+          marginBottom: "16px",
+        }}>
+          <p style={{ color: "var(--text-secondary)", fontSize: "12px", lineHeight: 1.6 }}>
+            {justification}
+          </p>
+        </div>
+      )}
+
+      {/* Points forts */}
+      {points_forts?.length > 0 && (
+        <div style={{ marginBottom: "12px" }}>
+          <div style={{
+            fontSize: "11px", color: "var(--success)",
+            fontWeight: 500, marginBottom: "6px",
+          }}>
+            Points forts
           </div>
-        )}
+          {points_forts.map((p, i) => (
+            <div key={i} style={{
+              display: "flex", gap: "8px",
+              fontSize: "12px", color: "var(--text-secondary)",
+              lineHeight: 1.6, marginBottom: "2px",
+            }}>
+              <span style={{ color: "var(--success)", flexShrink: 0 }}>›</span>
+              {p}
+            </div>
+          ))}
+        </div>
+      )}
 
-        {/* Points forts */}
-        {points_forts?.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-green-700 flex items-center gap-1">
-              <span>✅</span> Points forts
-            </h3>
-            <ul className="space-y-1">
-              {points_forts.map((point, index) => (
-                <li
-                  key={index}
-                  className="text-sm text-slate-600 flex items-start gap-2"
-                >
-                  <span className="text-green-500 mt-0.5">•</span>
-                  {point}
-                </li>
-              ))}
-            </ul>
+      {/* Points faibles */}
+      {points_faibles?.length > 0 && (
+        <div>
+          <div style={{
+            fontSize: "11px", color: "var(--danger)",
+            fontWeight: 500, marginBottom: "6px",
+          }}>
+            À améliorer
           </div>
-        )}
-
-        {/* Points faibles */}
-        {points_faibles?.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-red-700 flex items-center gap-1">
-              <span>⚠️</span> Points à améliorer
-            </h3>
-            <ul className="space-y-1">
-              {points_faibles.map((point, index) => (
-                <li
-                  key={index}
-                  className="text-sm text-slate-600 flex items-start gap-2"
-                >
-                  <span className="text-red-400 mt-0.5">•</span>
-                  {point}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-      </CardContent>
-    </Card>
+          {points_faibles.map((p, i) => (
+            <div key={i} style={{
+              display: "flex", gap: "8px",
+              fontSize: "12px", color: "var(--text-secondary)",
+              lineHeight: 1.6, marginBottom: "2px",
+            }}>
+              <span style={{ color: "var(--danger)", flexShrink: 0 }}>›</span>
+              {p}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

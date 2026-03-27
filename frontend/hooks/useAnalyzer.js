@@ -129,22 +129,22 @@ export function useAnalyzer() {
         const lines = chunk.split("\n")
 
         for (const line of lines) {
-  if (line.startsWith("data: ")) {
-    const raw = line.slice(6) // → '{"token": "##"}'
+          if (line.startsWith("data: ")) {
+            const raw = line.slice(6) // → '{"token": "##"}'
 
-    // Ignore le signal de fin de stream
-    if (raw === "[DONE]") continue
+              // Ignore le signal de fin de stream
+              if (raw === "[DONE]") continue
 
-    try {
-      const parsed = JSON.parse(raw)       // → { token: "##" }
-      const tokenText = parsed.token ?? "" // → "##"
-      if (tokenText) {
-        setState(prev => ({ ...prev, advice: prev.advice + tokenText }))
-      }
-    } catch {
-      // Ligne malformée — on l'ignore silencieusement
-    }
-  }
+              try {
+                const parsed = JSON.parse(raw)       // → { token: "##" }
+                const tokenText = parsed.token ?? "" // → "##"
+                if (tokenText) {
+                  setState(prev => ({ ...prev, advice: prev.advice + tokenText }))
+                }
+              } catch {
+                // Ligne malformée — on l'ignore silencieusement
+              }
+         }
         }
       }
 
@@ -159,8 +159,13 @@ export function useAnalyzer() {
   // ACTION 4 : Recommencer une nouvelle analyse
   // ─────────────────────────────────────────────
   const handleReset = useCallback(() => {
-    setState(initialState)
-  }, [])
+  // On garde cvFile et cvText — le CV reste chargé
+  setState(prev => ({
+    ...initialState,
+    cvFile: prev.cvFile,
+    cvText: prev.cvText,
+  }))
+}, [])
 
   // On expose l'état et les actions aux composants
   return {
