@@ -1,0 +1,15 @@
+# backend/render.yaml
+# Ce fichier configure le déploiement automatique sur Render.com
+# Render le détecte automatiquement à la racine du service
+
+services:
+  - type: web               # Type de service : serveur web
+    name: cv-analyzer-ai    # Nom affiché sur le dashboard Render
+    runtime: python         # On utilise Python
+    buildCommand: pip install -r requirements.txt   # Installation des dépendances
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT  # Démarrage FastAPI
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0       # Version Python explicite (évite les surprises)
+      - key: GROQ_API_KEY
+        sync: false         # "sync: false" = tu la saisiras manuellement dans l'UI Render (sécurité)

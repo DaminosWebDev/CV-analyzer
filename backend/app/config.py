@@ -21,17 +21,35 @@ class Settings(BaseSettings):
     app_name: str = "CV-Analyzer-AI"
     app_version: str = "1.0.0"
 
+    # ── URL frontend Vercel ───────────────────────────────────────────────────
+    # Sera renseignée via variable d'environnement sur Render
+    # Exemple : https://cv-analyzer-ai.vercel.app
+    frontend_url: str = ""
+
     # ── CORS — origines autorisées à appeler l'API ────────────────────────────
-    allowed_origins: list[str] = [
-        "http://localhost:3000",   # Next.js en développement local
+    # Les origines fixes (toujours présentes)
+    _base_origins: list[str] = [
+        "http://localhost:3000",
         "http://localhost:3001",
     ]
 
+    @property
+    def allowed_origins(self) -> list[str]:
+        """
+        Construit dynamiquement la liste des origines autorisées.
+        Fusionne les origines fixes + l'URL Vercel si elle est définie.
+        """
+        origins = list(self._base_origins)
+
+        # Ajoute l'URL Vercel si la variable d'environnement est renseignée
+        if self.frontend_url:
+            origins.append(self.frontend_url)
+
+        return origins
+
     class Config:
-        # Indique où trouver le fichier .env
         env_file = ".env"
         env_file_encoding = "utf-8"
-        # Ignore les variables d'environnement inconnues (évite les erreurs)
         extra = "ignore"
 
 

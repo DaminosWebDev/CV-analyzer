@@ -10,6 +10,8 @@ __pycache__/
 # ── Variables d'environnement (JAMAIS sur Git !) ──────
 .env
 *.env
+.env.local          
+.env.*.local        
 
 # ── Dépendances Node.js (frontend) ───────────────────
 node_modules/

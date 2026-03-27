@@ -5,7 +5,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import analyze
-
 from app.config import settings
 
 # ── Création de l'application FastAPI ────────────────────────────────────────
@@ -29,19 +28,19 @@ API d'analyse de compatibilité entre un CV et une offre d'emploi via IA.
 - **Backend** : FastAPI async
 - **Parsing PDF** : PyMuPDF
     """,
-    docs_url="/docs",        # URL de la doc Swagger
-    redoc_url="/redoc",      # URL de la doc ReDoc (alternative)
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 # ── Configuration CORS ────────────────────────────────────────────────────────
-# CORS = Cross-Origin Resource Sharing
-# Permet au frontend (localhost:3000) d'appeler le backend (localhost:8000)
+# allowed_origins est maintenant une @property dans config.py
+# Elle fusionne automatiquement localhost + l'URL Vercel (si définie)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],     # GET, POST, PUT, DELETE...
-    allow_headers=["*"],     # Tous les headers HTTP autorisés
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ── Enregistrement des routers ────────────────────────────────────────────────
